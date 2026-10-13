@@ -1,0 +1,15 @@
+{
+  "name": "mi-asistente",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mi Asistente: horario variable del negocio, alarmas y voz",
+  "dependencies": {
+    "@capacitor/android": "6.2.2",
+    "@capacitor/core": "6.2.2",
+    "@capacitor/local-notifications": "6.1.3",
+    "@capacitor-community/text-to-speech": "4.1.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "6.2.2"
+  }
+}

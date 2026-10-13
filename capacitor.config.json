@@ -1,0 +1,10 @@
+{
+  "appId": "pe.brigit.miasistente",
+  "appName": "Mi Asistente",
+  "webDir": "www",
+  "plugins": {
+    "LocalNotifications": {
+      "iconColor": "#8E72C4"
+    }
+  }
+}
