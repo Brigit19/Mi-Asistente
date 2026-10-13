@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="es">
+<title>Mi Asistente</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap">
+<style>
+html{-webkit-text-size-adjust:100%}body{margin:0}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+/* Layout: agenda de papel lavanda — cabecera breve, pestañas, tarjetas por día con línea de tiempo vertical */
+:root{
+  --bg:#f7f4fb; --paper:#ffffff; --sand:#f3ece2; --ink:#2f2740; --muted:#6f6582;
+  --line:#e4dcef; --lav:#8e72c4; --lav-soft:#ece5f8; --lav-ink:#5b4596;
+  --ok:#2f7d5b; --ok-soft:#e2f3ea; --warn:#9a6a12; --warn-soft:#fbf0d9; --bad:#b0384f; --bad-soft:#fbe4e8;
+  --uni:#6b5bd1; --igl:#b4689b; --casa:#c08a4a; --neg:#4f8a8b; --flex:#8e72c4;
+  --f-display:"Lora",Georgia,"Times New Roman",serif;
+  --f-body:"Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1c1824; --paper:#262030; --sand:#2e2734; --ink:#eee8f7; --muted:#a99fbb;
+  --line:#3a3248; --lav:#b39ce8; --lav-soft:#332a47; --lav-ink:#cdbcf3;
+  --ok:#7fd1aa; --ok-soft:#1f3a2e; --warn:#e8c06b; --warn-soft:#3a3020; --bad:#f0899c; --bad-soft:#40222a;
+  --uni:#a397f0; --igl:#e09ac8; --casa:#e2b47c; --neg:#86c3c4; --flex:#b39ce8; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1c1824; --paper:#262030; --sand:#2e2734; --ink:#eee8f7; --muted:#a99fbb;
+  --line:#3a3248; --lav:#b39ce8; --lav-soft:#332a47; --lav-ink:#cdbcf3;
+  --ok:#7fd1aa; --ok-soft:#1f3a2e; --warn:#e8c06b; --warn-soft:#3a3020; --bad:#f0899c; --bad-soft:#40222a;
+  --uni:#a397f0; --igl:#e09ac8; --casa:#e2b47c; --neg:#86c3c4; --flex:#b39ce8; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:16px;padding-block:20px 48px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;text-wrap:balance;margin:0}
+h1{font-size:1.75rem;color:var(--lav-ink)}
+h2{font-size:1.25rem}
+h3{font-size:1.05rem}
+.sub{color:var(--muted);margin:4px 0 0;max-width:65ch}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between}
+.sync{font-size:.8rem;color:var(--muted)}
+nav{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 16px;border-bottom:1px solid var(--line);padding-bottom:10px}
+nav button{font:inherit;font-weight:600;border:1px solid transparent;background:none;color:var(--muted);padding:7px 14px;border-radius:999px;cursor:pointer}
+nav button[aria-selected="true"]{background:var(--lav-soft);color:var(--lav-ink);border-color:var(--line)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--lav);outline-offset:2px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px}
+.stack{display:flex;flex-direction:column;gap:14px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:16px}
+@media (max-width:820px){.grid2{grid-template-columns:1fr}}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--muted);font-weight:600}
+input[type=time],input[type=number],input[type=text],input[type=date],select{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 9px;min-width:0}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.row>*{min-width:0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;flex-wrap:wrap}
+.seg button{border:0;background:none;padding:7px 13px;cursor:pointer;color:var(--muted);font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--lav);color:var(--paper)}
+.btn{border:1px solid var(--lav);background:var(--lav);color:var(--paper);padding:7px 14px;border-radius:8px;cursor:pointer;font-weight:700}
+.btn.ghost{background:none;color:var(--lav-ink)}
+.btn.sm{padding:4px 10px;font-size:.85rem}
+.lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.big{font-family:var(--f-display);font-size:1.6rem;font-variant-numeric:tabular-nums}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.facts>div{background:var(--sand);border-radius:10px;padding:10px 12px}
+@media (max-width:480px){.facts{grid-template-columns:1fr 1fr}}
+.pill{display:inline-block;font-size:.75rem;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.p-ok{background:var(--ok-soft);color:var(--ok)}.p-warn{background:var(--warn-soft);color:var(--warn)}.p-bad{background:var(--bad-soft);color:var(--bad)}.p-lav{background:var(--lav-soft);color:var(--lav-ink)}
+.alerts{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.alerts li{padding:9px 12px;border-radius:10px;font-size:.9rem;border-left:4px solid}
+.a-bad{background:var(--bad-soft);border-color:var(--bad)}.a-warn{background:var(--warn-soft);border-color:var(--warn)}.a-ok{background:var(--ok-soft);border-color:var(--ok)}
+.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.tl li{display:grid;grid-template-columns:118px minmax(0,1fr);gap:10px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:.9rem}
+.tl .t{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.82rem}
+.tl .b{border-left:3px solid var(--k,var(--line));padding-left:9px}
+.tl .b small{display:block;color:var(--muted)}
+.k-uni{--k:var(--uni)}.k-igl{--k:var(--igl)}.k-casa{--k:var(--casa)}.k-neg{--k:var(--neg)}.k-flex{--k:var(--flex)}.k-tras{--k:var(--line)}.k-extra{--k:var(--bad)}
+.week{display:grid;grid-template-columns:repeat(7,minmax(210px,1fr));gap:10px;overflow-x:auto;padding-bottom:8px}
+.day{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.day.today{border-color:var(--lav)}
+.day .tl li{grid-template-columns:1fr;gap:0}
+.dayhead{display:flex;justify-content:space-between;gap:6px;align-items:baseline}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:5px 12px;cursor:pointer;font-weight:600;font-size:.88rem}
+.chip[aria-pressed="true"]{background:var(--lav-soft);border-color:var(--lav);color:var(--lav-ink)}
+.chip .hint{font-weight:400;color:var(--muted);font-size:.75rem;margin-left:4px}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+.tbl{overflow-x:auto}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+td input[type=text]{width:100%}
+td input[type=number]{width:70px}
+.muted{color:var(--muted)}
+.check{display:flex;gap:8px;align-items:center;font-size:.9rem}
+.mats{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}
+.note{font-size:.85rem;color:var(--muted);max-width:70ch}
+.monthweeks{display:flex;flex-direction:column;gap:10px}
+.mw{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+@media (max-width:560px){.mw{grid-template-columns:1fr}}
+.meter{height:8px;background:var(--lav-soft);border-radius:99px;overflow:hidden}
+.meter>i{display:block;height:100%;background:var(--lav)}
+@media (prefers-reduced-motion:no-preference){nav button,.chip,.seg button{transition:background .15s,color .15s}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Mi horario en el negocio</h1>
+      <p class="sub">La hora en que sales del negocio cambia cada día según el regreso de tu mamá del mercado de frutas. Regístrala aquí y tu semana se reorganiza sola, sin tocar clases, iglesia ni sueño.</p>
+    </div>
+    <span class="sync" id="sync">Guardado en tu celular</span>
+  </header>
+
+  <nav role="tablist">
+    <button role="tab" data-tab="asistente" aria-selected="true">Mi asistente</button>
+    <button role="tab" data-tab="hoy" aria-selected="false">Mi día</button>
+    <button role="tab" data-tab="semana" aria-selected="false">Mi semana</button>
+    <button role="tab" data-tab="mes" aria-selected="false">Semanas en casa</button>
+    <button role="tab" data-tab="tareas" aria-selected="false">Tareas flexibles</button>
+    <button role="tab" data-tab="ajustes" aria-selected="false">Ajustes</button>
+  </nav>
+
+  <main id="view"></main>
+</div>
+
+<script>
+/* ---------- utilidades de tiempo ---------- */
+const toM = s => { if(!s) return null; const [h,m]=s.split(":").map(Number); return h*60+m; };
+const toS = m => String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");
+const fmt = m => { if(m==null) return "—"; m=((m%1440)+1440)%1440; let h=Math.floor(m/60), mi=m%60; const ap=h<12?"a. m.":"p. m."; h=h%12||12; return h+":"+String(mi).padStart(2,"0")+" "+ap; };
+const pad = n => String(n).padStart(2,"0");
+const ds = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const pd = s => { const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); };
+const addD = (s,n) => { const d=pd(s); d.setDate(d.getDate()+n); return ds(d); };
+const monday = s => { const d=pd(s); const w=(d.getDay()+6)%7; d.setDate(d.getDate()-w); return ds(d); };
+const DN = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+const MN = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const nice = s => { const d=pd(s); return DN[d.getDay()]+" "+d.getDate()+" de "+MN[d.getMonth()]; };
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const uid = () => Math.random().toString(36).slice(2,9);
+
+/* ---------- horario fijo (de tu documento) ---------- */
+const FIXED = {
+  1:[{s:"08:30",e:"10:00",l:"Clase virtual (universidad)",k:"uni"},{s:"18:00",e:"20:00",l:"Clase virtual (universidad)",k:"uni"},{s:"21:00",e:"23:00",l:"Clases de apoyo juvenil virtual",k:"igl",v:1}],
+  2:[{s:"10:15",e:"11:45",l:"Clase virtual (universidad)",k:"uni"},{s:"15:30",e:"17:00",l:"Clase virtual (universidad)",k:"uni"},{s:"20:00",e:"21:30",l:"Clases de mayordomía",k:"igl"},{id:"lideresMar",l:"Reunión de líderes",k:"igl"}],
+  3:[{s:"18:30",e:"20:00",l:"Clase virtual (universidad)",k:"uni"}],
+  4:[{s:"08:30",e:"10:00",l:"Clase virtual (universidad)",k:"uni"},{s:"10:15",e:"11:45",l:"Clase virtual (universidad)",k:"uni"},{s:"18:00",e:"21:00",l:"Servicio en la iglesia",k:"igl"},{s:"21:30",e:"22:30",l:"Reunión de líderes",k:"igl"}],
+  5:[{s:"08:30",e:"10:45",l:"Clase virtual (universidad)",k:"uni"},{s:"15:30",e:"17:00",l:"Clase virtual (universidad)",k:"uni"},{id:"ensayo",l:"Ensayo de alabanza",k:"igl"}],
+  6:[{s:"18:00",e:"19:00",l:"Preparación reunión juvenil",k:"igl"},{s:"19:00",e:"21:30",l:"Reunión de jóvenes",k:"igl"},{s:"21:30",e:"22:30",l:"Líderes: evaluación",k:"igl"}],
+  0:[{s:"13:30",e:"14:20",l:"Almorzar",k:"casa"},{s:"14:20",e:"15:20",l:"Ducharme",k:"casa"},{s:"15:20",e:"15:50",l:"Maquillarme y alistarme",k:"casa"},{s:"16:00",e:"19:00",l:"Servicio en la iglesia",k:"igl",noTravelBefore:1}]
+};
+
+const CATS = {uni:{n:"Universidad (obligatoria)",p:1},lid:{n:"Liderazgo y enseñanzas",p:2},esp:{n:"Vida espiritual",p:2},per:{n:"Ejercicio y canto",p:3},curso:{n:"Curso adicional",p:4},hogar:{n:"Hogar",p:5}};
+
+/* ---------- estado ---------- */
+const DEFAULT = {
+  v:1,
+  cfg:{wake:"06:30",goal:8,travel:7,margin:10,estSalida:"11:00",churchTravel:10,maxFlex:150,lideresMar:"pendiente",ensayo:"19:00",
+       mats:["Laptop y cargador","Audífonos con micrófono","Datos o wifi revisado","Cuaderno y lapicero","Enlaces de clase a la mano","Botella de agua"]},
+  days:{},   // "2026-10-13": {mom:"10:40", close:30, from:"casa|negocio|", talked:false, mats:{}, extra:[]}
+  weeks:{},  // lunes: {st:"propuesta|conversar|confirmada|flexible", homeDays:[2,3]}
+  tasks:[
+    {id:"t1",n:"Tareas y trabajos de la universidad",d:60,c:"uni",x:3,w:"any",pref:[]},
+    {id:"t2",n:"Preparar enseñanza de señoritas",d:45,c:"lid",x:2,w:"any",pref:[3,5]},
+    {id:"t3",n:"Seguimiento individual a una señorita",d:45,c:"lid",x:2,w:"casa",pref:[3],coord:true},
+    {id:"t4",n:"Ejercicio (incluye cambiarme y asearme)",d:45,c:"per",x:2,w:"casa",pref:[]},
+    {id:"t5",n:"Práctica de canto en casa",d:20,c:"per",x:2,w:"casa",pref:[4,5]},
+    {id:"t6",n:"Lavar ropa (tiempo activo)",d:40,c:"hogar",x:1,w:"casa",pref:[3,0]},
+    {id:"t7",n:"Limpiar y ordenar mi habitación",d:30,c:"hogar",x:2,w:"casa",pref:[]},
+    {id:"t8",n:"Inglés",d:45,c:"curso",x:3,w:"any",pref:[],pend:true},
+    {id:"t9",n:"Análisis de datos",d:60,c:"curso",x:3,w:"any",pref:[],pend:true}
+  ]
+};
+var S = JSON.parse(JSON.stringify(DEFAULT));
+const LS = "mi-asistente-negocio-v1";
+try{ const r=localStorage.getItem(LS); if(r) S=Object.assign(JSON.parse(JSON.stringify(DEFAULT)),JSON.parse(r)); }catch(e){}
+
+let dbDoc=null, saveT=null;
+var save=function(){
+  try{ localStorage.setItem(LS,JSON.stringify(S)); }catch(e){}
+  clearTimeout(saveT);
+  saveT=setTimeout(async()=>{
+    if(!dbDoc) return;
+    try{ await dbDoc.set(JSON.parse(JSON.stringify(S))); setSync("Guardado en tu cuenta"); }
+    catch(e){ setSync("No se pudo guardar en tu cuenta; queda en este navegador"); }
+  },600);
+}
+function setSync(t){ document.getElementById("sync").textContent=t; }
+
+
+/* ---------- semanas en casa ---------- */
+function weekOf(date){ const m=monday(date); return S.weeks[m]||null; }
+function defaultWeekPlan(m){
+  // Propuesta: alternar semanas (1.ª y 3.ª del mes), sin darlas por acordadas.
+  const d=pd(m); const thu=new Date(d); thu.setDate(d.getDate()+3);
+  const idx=Math.floor((thu.getDate()-1)/7);
+  return idx%2===0 ? {st:"propuesta",homeDays:[2,3],auto:true} : {st:"flexible",homeDays:[],auto:true};
+}
+function getWeek(m){ return S.weeks[m]||defaultWeekPlan(m); }
+function setWeek(m,patch){ S.weeks[m]=Object.assign({},getWeek(m),patch,{auto:false}); save(); render(); }
+
+/* facilidad de estudiar desde casa por día */
+function avgSalida(wd){
+  const v=Object.entries(S.days).filter(([k,d])=>pd(k).getDay()===wd&&d.mom).map(([k,d])=>toM(d.mom)+(+d.close||0));
+  return v.length?Math.round(v.reduce((a,b)=>a+b,0)/v.length):null;
+}
+function dayEase(wd){
+  const unis=(FIXED[wd]||[]).filter(b=>b.k==="uni"&&b.s);
+  if(!unis.length) return {lvl:"sin",t:"Sin clases"};
+  const first=Math.min(...unis.map(b=>toM(b.s)));
+  const need=first-S.cfg.travel-S.cfg.margin;
+  const av=avgSalida(wd);
+  if(first>=toM("13:00")) return {lvl:"facil",t:"Clases por la tarde o noche",need};
+  if(av!=null) return av<=need?{lvl:"facil",t:"Sueles salir a tiempo",need}:{lvl:"dificil",t:"Sueles salir después de "+fmt(need),need};
+  if(first>=toM("10:00")) return {lvl:"medio",t:"Debes salir a las "+fmt(need),need};
+  return {lvl:"dificil",t:"Clase 8:30: coordinar con mamá",need};
+}
+
+/* ---------- cálculo de un día ---------- */
+function dayRec(date){ return S.days[date]||{}; }
+function setDay(date,patch){ S.days[date]=Object.assign({},dayRec(date),patch); save(); render(); }
+
+function fixedFor(date){
+  const wd=pd(date).getDay(), c=S.cfg;
+  const out=[];
+  for(const b of (FIXED[wd]||[])){
+    if(b.id==="lideresMar"){
+      const o={pendiente:{s:"21:00",e:"22:00",conf:true},despues:{s:"21:30",e:"22:30"},virtual:{s:"21:00",e:"22:00",v:1},no:null}[c.lideresMar];
+      if(o) out.push(Object.assign({},b,o,{l:b.l+(c.lideresMar==="virtual"?" (virtual)":"")}));
+      continue;
+    }
+    if(b.id==="ensayo"){ out.push(Object.assign({},b,{s:c.ensayo,e:"21:00"})); continue; }
+    out.push(Object.assign({},b));
+  }
+  for(const x of (dayRec(date).extra||[])) out.push({s:x.s,e:x.e,l:x.l,k:"extra",place:x.p});
+  return out;
+}
+
+function computeDay(date){
+  const wd=pd(date).getDay(), c=S.cfg, r=dayRec(date), wk=getWeek(monday(date));
+  const wake=toM(c.wake), bed=wake+1440-Math.round(c.goal*60);  // hora objetivo para dormir
+  const T=+c.travel, M=+c.margin, ct=+c.churchTravel;
+  const blocks=[], alerts=[];
+  const planned = wk.st!=="flexible" && (wk.homeDays||[]).includes(wd);
+  const chosen = r.from!==undefined;
+  const from = chosen ? r.from : (planned?"casa":"");
+  const fromState = chosen ? "elegido" : (planned?(wk.st==="confirmada"?"semana confirmada":"propuesta"):"sin decidir");
+
+  blocks.push({s:wake,e:toM("07:23"),l:"Levantarme, alistarme y devocional breve",k:"casa"});
+  blocks.push({s:toM("07:23"),e:toM("07:30"),l:"Traslado al negocio",k:"tras"});
+
+  let salida, salidaTipo;
+  if(wd===0){ salida=toM("13:30"); salidaTipo="fijo"; }
+  else if(r.mom){ salida=toM(r.mom)+(+r.close||0); salidaTipo="registrado"; }
+  else { const av=avgSalida(wd); salida=av??toM(c.estSalida); salidaTipo=av!=null?"promedio de tus registros":"estimado"; }
+  const llegada=salida+T;
+
+  const fx=fixedFor(date).map(b=>Object.assign({},b,{s:toM(b.s),e:toM(b.e)}));
+  // clases: ¿desde dónde?
+  for(const b of fx.filter(b=>b.k==="uni")){
+    if(b.s>=llegada+M){ b.where="casa"; continue; }
+    if(b.s<toM("07:30")){ b.where="casa"; continue; }
+    if(from==="negocio"){ b.where="negocio"; }
+    else if(from==="casa"){
+      const need=b.s-T-M;
+      b.where="casa";
+      if(salidaTipo==="fijo"||need<salida) alerts.push({lvl:r.talked?"warn":"bad",t:`Para llevar la clase de ${fmt(b.s)} desde casa necesitas salir del negocio a las ${fmt(need)}, pero tu salida ${salidaTipo==="registrado"?"registrada":salidaTipo==="fijo"?"fija":"estimada"} es a las ${fmt(salida)} y no llegarías. ${r.talked?"Ya lo conversaste con tu mamá: confirma que puedes salir a esa hora.":"Coordínalo con tu mamá o conéctate desde el negocio."}`});
+    } else {
+      b.where="?";
+      alerts.push({lvl:"warn",t:`Clase de ${fmt(b.s)}: todavía no decides desde dónde. Para llevarla en casa debes salir a las ${fmt(b.s-T-M)}; si no es posible, prepara tus materiales para el negocio.`});
+    }
+  }
+  // fin real del bloque negocio
+  let negFin=salida;
+  const homeMorning=fx.filter(b=>b.k==="uni"&&b.where==="casa"&&b.s<llegada);
+  if(homeMorning.length&&from==="casa"&&wd!==0) negFin=Math.min(salida,Math.min(...homeMorning.map(b=>b.s))-T-M);
+  blocks.push({s:toM("07:30"),e:negFin,l:"Negocio de mi mamá",k:"neg",note: wd===0?"Hasta la 1:30 p. m.":`Salida ${salidaTipo}: ${fmt(salida)}`+(negFin<salida?` · saldrías antes, a las ${fmt(negFin)} (por coordinar)`:"") });
+  blocks.push({s:negFin,e:negFin+T,l:"Regreso a casa",k:"tras"});
+  const home=negFin+T;
+
+  // almuerzo: 12:00 o 1:00 p. m.
+  if(wd!==0){
+    let ls=null;
+    if(home<=toM("12:00")) ls=toM("12:00");
+    else if(home<=toM("13:00")) { ls=toM("13:00"); alerts.push({lvl:"warn",t:`Llegas a casa a las ${fmt(home)}: el almuerzo pasa a la 1:00 p. m.`}); }
+    else alerts.push({lvl:"bad",t:`Llegas a casa a las ${fmt(home)}, después de la hora de cocinar. Acuerda con tu mamá quién cocina hoy o prepara algo la noche anterior.`});
+    if(ls!=null) blocks.push({s:ls,e:ls+60,l:"Cocinar y organizar el almuerzo",k:"casa"});
+  }
+
+  for(const b of fx){
+    const tr = (b.k==="igl"&&!b.v)||(b.k==="extra"&&b.place==="fuera");
+    if(tr&&!b.noTravelBefore) blocks.push({s:b.s-ct,e:b.s,l:"Traslado",k:"tras"});
+    if(b.noTravelBefore) blocks.push({s:toM("15:50"),e:b.s,l:"Salir de casa a la iglesia",k:"tras"});
+    blocks.push({s:b.s,e:b.e,l:b.l,k:b.k,where:b.where,conf:b.conf});
+  }
+  // traslado de regreso tras último compromiso presencial
+  const pres=fx.filter(b=>(b.k==="igl"&&!b.v)||(b.k==="extra"&&b.place==="fuera"));
+  if(pres.length){ const last=Math.max(...pres.map(b=>b.e)); blocks.push({s:last,e:last+ct,l:"Regreso a casa",k:"tras"}); }
+
+  // conflictos entre compromisos
+  const firm=blocks.filter(b=>b.k!=="tras").sort((a,b)=>a.s-b.s);
+  for(let i=0;i<firm.length;i++)for(let j=i+1;j<firm.length;j++){
+    const a=firm[i],b=firm[j];
+    if(b.s<a.e && !(a.k==="neg"&&b.where==="negocio")){
+      if(a.k==="neg"&&b.k==="uni") continue; // ya avisado arriba
+      alerts.push({lvl:"bad",t:`Se cruzan «${a.l}» (${fmt(a.s)}–${fmt(a.e)}) y «${b.l}» (${fmt(b.s)}–${fmt(b.e)}). Confirma cuál va primero; no se asume que puedes estar en ambas.`});
+    }
+  }
+  if(fx.some(b=>b.conf)) alerts.push({lvl:"warn",t:"Martes: la reunión de líderes se cruza con mayordomía. Confirma en Ajustes si empieza después, si es virtual o si no asistes."});
+
+  // sueño
+  const lastEnd=Math.max(...blocks.map(b=>b.e));
+  const sleepH=((wake+1440)-(lastEnd+30))/60;
+  if(lastEnd+30>bed) alerts.push({lvl:"bad",t:`Esta noche terminas a las ${fmt(lastEnd)}. Con 30 min para prepararte, duermes ${sleepH.toFixed(1)} h (meta: ${c.goal} h). Revisa si alguna actividad nocturna puede moverse o acortarse.`});
+
+  blocks.sort((a,b)=>a.s-b.s||a.e-b.e);
+  return {date,wd,wake,bed,salida,salidaTipo,llegada:home,from,fromState,blocks,alerts,sleepH,lastEnd,negFin,uniNeg:fx.some(b=>b.where==="negocio")};
+}
+
+/* huecos libres de un día (casa) y en el negocio */
+function freeWindows(day){
+  const lo=day.wake, hi=Math.min(day.bed-30, 24*60);
+  const busy=day.blocks.map(b=>[b.s,b.e]).sort((a,b)=>a[0]-b[0]);
+  const out=[]; let cur=lo;
+  for(const [s,e] of busy){ if(s>cur) out.push({s:cur,e:Math.min(s,hi),place:"casa"}); cur=Math.max(cur,e); if(cur>=hi) break; }
+  if(cur<hi) out.push({s:cur,e:hi,place:"casa"});
+  // hueco de estudio en el negocio (solo si ese día estudias desde allí)
+  if(day.from==="negocio"&&day.wd!==0){
+    const neg=day.blocks.find(b=>b.k==="neg"); const cls=day.blocks.filter(b=>b.where==="negocio");
+    let c2=neg.s+30;
+    for(const b of cls){ if(b.s-c2>=30) out.push({s:c2,e:b.s-5,place:"negocio"}); c2=Math.max(c2,b.e+5); }
+    if(neg.e-c2>=30) out.push({s:c2,e:neg.e-5,place:"negocio"});
+  }
+  return out.filter(w=>w.e-w.s>=15);
+}
+
+/* ---------- plan semanal ---------- */
+function planWeek(mon){
+  const days=[...Array(7)].map((_,i)=>computeDay(addD(mon,i)));
+  const wins=days.map(d=>freeWindows(d));
+  const load=days.map(()=>0), placed=days.map(()=>[]), unplaced=[], suggestions=[];
+  const tasks=[...S.tasks].sort((a,b)=>(a.pend?1:0)-(b.pend?1:0)||CATS[a.c].p-CATS[b.c].p);
+  const gap=10;
+  function tryPlace(di,t,dry){
+    if(load[di]+t.d>S.cfg.maxFlex) return null;
+    if(placed[di].some(p=>p.id===t.id)) return null;
+    for(const w of wins[di]){
+      if(t.w==="casa"&&w.place!=="casa") continue;
+      if(w.place==="negocio"&&t.c!=="uni"&&t.c!=="curso") continue;
+      if(w.e-w.s>=t.d){
+        const s=w.s, e=s+t.d;
+        if(!dry){ w.s=e+gap; load[di]+=t.d; const p={id:t.id,s,e,l:t.n,k:"flex",place:w.place,coord:t.coord,c:t.c}; placed[di].push(p); }
+        return {s,e,place:w.place};
+      }
+    }
+    return null;
+  }
+  for(const t of tasks){
+    if(t.off) continue;
+    for(let k=0;k<(+t.x||1);k++){
+      const order=[...Array(7).keys()].sort((a,b)=>{
+        const pa=(t.pref||[]).includes(days[a].wd)?0:1, pb=(t.pref||[]).includes(days[b].wd)?0:1;
+        return pa-pb || load[a]-load[b] || a-b;
+      });
+      let ok=false;
+      for(const di of order){
+        if(t.pend){ const r=tryPlace(di,t,true); if(r){ suggestions.push({t,di,...r}); placed[di].push({id:t.id,dry:1}); ok=true; break; } continue; }
+        if(tryPlace(di,t,false)){ ok=true; break; }
+      }
+      if(!ok) unplaced.push(t);
+    }
+  }
+  placed.forEach(a=>{ for(let i=a.length-1;i>=0;i--) if(a[i].dry) a.splice(i,1); });
+  return {days,placed,unplaced,suggestions,load};
+}
+
+/* ---------- vistas ---------- */
+let tab="asistente", selDate=ds(new Date()), selWeek=monday(ds(new Date()));
+const view=document.getElementById("view");
+
+function tlHTML(items,compact){
+  return `<ul class="tl">${items.map(b=>`<li><span class="t">${fmt(b.s)} – ${fmt(b.e)}</span><span class="b k-${b.k}">${esc(b.l)}${
+    b.where==="negocio"?` <span class="pill p-lav">desde el negocio</span>`:b.where==="casa"&&b.k==="uni"?` <span class="pill p-ok">desde casa</span>`:b.where==="?"?` <span class="pill p-warn">por decidir</span>`:""}${
+    b.k==="flex"?` <span class="pill p-lav">${b.place==="negocio"?"en el negocio":"flexible"}</span>`:""}${
+    b.coord?` <span class="pill p-warn">coordinar</span>`:""}${b.conf?` <span class="pill p-bad">por confirmar</span>`:""}${
+    b.note&&!compact?`<small>${esc(b.note)}</small>`:""}</span></li>`).join("")}</ul>`;
+}
+function alertsHTML(a){ return a.length?`<ul class="alerts">${a.map(x=>`<li class="a-${x.lvl}">${esc(x.t)}</li>`).join("")}</ul>`:`<ul class="alerts"><li class="a-ok">Sin choques de horario. Tu sueño está protegido.</li></ul>`; }
+
+function renderHoy(){
+  const d=computeDay(selDate), r=dayRec(selDate), wk=getWeek(monday(selDate));
+  const plan=planWeek(monday(selDate)); const di=(d.wd+6)%7;
+  const all=[...d.blocks,...plan.placed[di]].sort((a,b)=>a.s-b.s);
+  const mats=S.cfg.mats; const chk=r.mats||{};
+  const showMats = d.from==="negocio" || d.blocks.some(b=>b.where==="?");
+  view.innerHTML=`
+  <div class="grid2">
+    <div class="stack">
+      <section class="panel stack">
+        <div class="row" style="justify-content:space-between">
+          <h2>${nice(selDate)}</h2>
+          <input type="date" id="fDate" value="${selDate}" aria-label="Elegir fecha">
+        </div>
+        ${d.wd===0?`<p class="note">Los domingos el negocio va de 7:30 a. m. a 1:30 p. m. Sales de casa a la iglesia a las 3:50 p. m.</p>`:`
+        <div class="row">
+          <label class="f">Hora en que regresó (o regresará) mi mamá<input type="time" id="fMom" value="${r.mom||""}"></label>
+          <label class="f">Minutos para terminar mis responsabilidades<input type="number" id="fClose" min="0" step="5" value="${r.close??30}"></label>
+        </div>
+        <div class="stack" style="gap:6px">
+          <span class="lbl">Hoy estudiaré desde…</span>
+          <div class="seg" role="group" aria-label="Hoy estudiaré desde">
+            ${[["negocio","el negocio"],["casa","casa"],["","todavía no lo sé"]].map(([v,t])=>`<button data-from="${v}" aria-pressed="${(r.from??"")===v}">${t}</button>`).join("")}
+          </div>
+          <span class="note">${r.from===undefined&&wk.st!=="flexible"&&(wk.homeDays||[]).includes(d.wd)?`Esta semana tenías planificado estudiar en casa este día (${wk.st==="confirmada"?"confirmado":"propuesta, aún sin acordar"}).`:""}</span>
+        </div>
+        <label class="check"><input type="checkbox" id="fTalk" ${r.talked?"checked":""}> Ya conversé con mi mamá la hora de salida de hoy</label>`}
+        <div class="facts">
+          <div><span class="lbl">Salida del negocio</span><div class="big">${fmt(d.negFin)}</div><span class="note">${d.salidaTipo}</span></div>
+          <div><span class="lbl">Llego a casa</span><div class="big">${fmt(d.llegada)}</div><span class="note">${S.cfg.travel} min de traslado</span></div>
+          <div><span class="lbl">Sueño posible</span><div class="big">${d.sleepH.toFixed(1)} h</div><span class="note">meta ${S.cfg.goal} h</span></div>
+        </div>
+      </section>
+      <section class="panel stack"><h3>Avisos del día</h3>${alertsHTML(d.alerts)}</section>
+      ${showMats?`<section class="panel stack"><h3>Para estudiar desde el negocio</h3><p class="note">Déjalo listo la noche anterior o antes de salir de casa a las 7:23 a. m.</p>
+        <div class="mats">${mats.map((m,i)=>`<label class="check"><input type="checkbox" data-mat="${i}" ${chk[i]?"checked":""}> ${esc(m)}</label>`).join("")}</div></section>`:""}
+    </div>
+    <section class="panel stack">
+      <div class="row" style="justify-content:space-between"><h2>Tu día ordenado</h2><span class="pill p-lav">${plan.placed[di].length} tareas flexibles</span></div>
+      ${tlHTML(all)}
+      ${extraForm()}
+      <p class="note">Las tareas flexibles se acomodan solas en los huecos reales. Si cambias la hora de regreso de tu mamá, se reorganizan sin tocar clases, iglesia, traslados ni sueño.</p>
+    </section>
+  </div>`;
+  bindHoy();
+}
+function extraForm(){
+  const ex=dayRec(selDate).extra||[];
+  return `<details><summary class="lbl" style="cursor:pointer">Agregar un compromiso extraordinario</summary>
+   <div class="stack" style="margin-top:10px">
+    ${ex.map((x,i)=>`<div class="row"><span>${esc(x.l)} · ${fmt(toM(x.s))}–${fmt(toM(x.e))}</span><button class="btn ghost sm" data-delx="${i}">Quitar</button></div>`).join("")}
+    <div class="row">
+      <label class="f">Qué<input type="text" id="xL" placeholder="Reunión de mujeres"></label>
+      <label class="f">Inicio<input type="time" id="xS"></label>
+      <label class="f">Fin<input type="time" id="xE"></label>
+      <label class="f">Lugar<select id="xP"><option value="fuera">Fuera de casa</option><option value="casa">En casa o virtual</option></select></label>
+      <button class="btn sm" id="xAdd">Agregar</button>
+    </div><span class="note" id="xMsg"></span></div></details>`;
+}
+function bindHoy(){
+  const $=id=>document.getElementById(id);
+  $("fDate").onchange=e=>{ if(e.target.value){ selDate=e.target.value; render(); } };
+  if($("fMom")){
+    $("fMom").onchange=e=>setDay(selDate,{mom:e.target.value});
+    $("fClose").onchange=e=>setDay(selDate,{close:Math.max(0,+e.target.value||0)});
+    $("fTalk").onchange=e=>setDay(selDate,{talked:e.target.checked});
+    view.querySelectorAll("[data-from]").forEach(b=>b.onclick=()=>setDay(selDate,{from:b.dataset.from}));
+  }
+  view.querySelectorAll("[data-mat]").forEach(c=>c.onchange=()=>{ const m=Object.assign({},dayRec(selDate).mats); m[c.dataset.mat]=c.checked; S.days[selDate]=Object.assign({},dayRec(selDate),{mats:m}); save(); });
+  view.querySelectorAll("[data-delx]").forEach(b=>b.onclick=()=>{ const ex=[...(dayRec(selDate).extra||[])]; ex.splice(+b.dataset.delx,1); setDay(selDate,{extra:ex}); });
+  $("xAdd").onclick=()=>{
+    const l=$("xL").value.trim(), s=$("xS").value, e=$("xE").value, p=$("xP").value;
+    if(!l||!s||!e||toM(e)<=toM(s)){ $("xMsg").textContent="Escribe qué es y una hora de fin posterior al inicio."; return; }
+    const ex=[...(dayRec(selDate).extra||[]),{l,s,e,p}]; setDay(selDate,{extra:ex});
+  };
+}
+
+function renderSemana(){
+  const plan=planWeek(selWeek), wk=getWeek(selWeek), today=ds(new Date());
+  const totalAlerts=plan.days.reduce((a,d)=>a+d.alerts.filter(x=>x.lvl==="bad").length,0);
+  view.innerHTML=`
+  <div class="stack">
+    <section class="panel stack">
+      <div class="row" style="justify-content:space-between">
+        <h2>Semana del ${pd(selWeek).getDate()} de ${MN[pd(selWeek).getMonth()]}</h2>
+        <div class="row"><button class="btn ghost sm" id="wPrev">← Anterior</button><button class="btn ghost sm" id="wNow">Esta semana</button><button class="btn ghost sm" id="wNext">Siguiente →</button></div>
+      </div>
+      ${weekAsk(selWeek,wk)}
+    </section>
+    ${plan.unplaced.length||plan.suggestions.length||totalAlerts?`<section class="panel stack"><h3>Revisión de la semana</h3><ul class="alerts">
+      ${totalAlerts?`<li class="a-bad">${totalAlerts} choque${totalAlerts>1?"s":""} o noche${totalAlerts>1?"s":""} sin sueño suficiente. Ábrelos en cada día.</li>`:""}
+      ${plan.unplaced.length?`<li class="a-warn">No caben sin quitar horas de sueño: ${[...new Set(plan.unplaced.map(t=>t.n))].map(esc).join(", ")}. Puedes reducir las veces por semana o pasarlas a la próxima.</li>`:""}
+      ${plan.suggestions.length?`<li class="a-ok">Horarios sugeridos para cursos pendientes (no se programan hasta que los apruebes en Tareas flexibles): ${plan.suggestions.map(s=>`${esc(s.t.n)} el ${DN[plan.days[s.di].wd].toLowerCase()} ${fmt(s.s)}`).join(" · ")}.</li>`:""}
+    </ul></section>`:""}
+    <div class="week">
+      ${plan.days.map((d,i)=>{
+        const items=[...d.blocks.filter(b=>b.k!=="tras"),...plan.placed[i]].sort((a,b)=>a.s-b.s);
+        const badge=d.wd===0?`<span class="pill p-lav">Negocio fijo</span>`:d.from==="casa"?`<span class="pill p-ok">Casa${d.fromState==="propuesta"?" · propuesta":""}</span>`:d.from==="negocio"?`<span class="pill p-lav">Negocio</span>`:`<span class="pill p-warn">Por decidir</span>`;
+        const bad=d.alerts.filter(x=>x.lvl==="bad").length, warn=d.alerts.filter(x=>x.lvl==="warn").length;
+        return `<article class="day ${d.date===today?"today":""}">
+          <div class="dayhead"><h3>${DN[d.wd]} ${pd(d.date).getDate()}</h3>${badge}</div>
+          <div class="note">Salida ${fmt(d.negFin)} · ${d.salidaTipo} · sueño ${d.sleepH.toFixed(1)} h</div>
+          ${bad||warn?`<div class="chips">${bad?`<span class="pill p-bad">${bad} choque${bad>1?"s":""}</span>`:""}${warn?`<span class="pill p-warn">${warn} por confirmar</span>`:""}</div>`:""}
+          ${tlHTML(items,true)}
+          <button class="btn ghost sm" data-open="${d.date}">Abrir día</button>
+        </article>`;}).join("")}
+    </div>
+  </div>`;
+  const $=id=>document.getElementById(id);
+  $("wPrev").onclick=()=>{selWeek=addD(selWeek,-7);render();};
+  $("wNext").onclick=()=>{selWeek=addD(selWeek,7);render();};
+  $("wNow").onclick=()=>{selWeek=monday(ds(new Date()));render();};
+  view.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{selDate=b.dataset.open;tab="hoy";render();});
+  bindWeekAsk(selWeek);
+}
+function weekAsk(m,wk){
+  return `<div class="stack" style="gap:8px">
+    <span class="lbl">¿Esta semana estudiarás desde casa?</span>
+    <div class="seg" role="group" aria-label="Estado de la semana">
+      ${[["flexible","Semana flexible"],["propuesta","En casa · propuesta"],["conversar","Por conversar con mamá"],["confirmada","Confirmada con mamá"]].map(([v,t])=>`<button data-wst="${v}" data-m="${m}" aria-pressed="${wk.st===v}">${t}</button>`).join("")}
+    </div>
+    ${wk.st!=="flexible"?`<span class="lbl">¿Qué días podrás estudiar desde casa?</span>
+    <div class="chips">${[1,2,3,4,5,6].map(wd=>{const e=dayEase(wd);return `<button class="chip" data-hd="${wd}" data-m="${m}" aria-pressed="${(wk.homeDays||[]).includes(wd)}">${DN[wd]}<span class="hint">${e.t}</span></button>`;}).join("")}</div>
+    <p class="note">${wk.st==="confirmada"?"Estos días cuentan como acordados.":"Mientras no lo confirmes con tu mamá, estos días se muestran como propuesta y no se dan por hechos."}${wk.auto?" Esta semana todavía es la sugerencia automática.":""}</p>`:`<p class="note">Semana flexible: estudias desde el negocio cuando se pueda y eliges cada día en «Mi día».</p>`}
+  </div>`;
+}
+function bindWeekAsk(){
+  view.querySelectorAll("[data-wst]").forEach(b=>b.onclick=()=>{ const m=b.dataset.m, cur=getWeek(m); setWeek(m,{st:b.dataset.wst,homeDays:b.dataset.wst!=="flexible"&&!(cur.homeDays||[]).length?[2,3]:cur.homeDays}); });
+  view.querySelectorAll("[data-hd]").forEach(b=>b.onclick=()=>{ const m=b.dataset.m, wd=+b.dataset.hd; const h=new Set(getWeek(m).homeDays||[]); h.has(wd)?h.delete(wd):h.add(wd); setWeek(m,{homeDays:[...h].sort()}); });
+}
+
+let selMonth=ds(new Date()).slice(0,7);
+function renderMes(){
+  const [y,mo]=selMonth.split("-").map(Number);
+  const first=new Date(y,mo-1,1), last=new Date(y,mo,0);
+  const mons=[]; for(let m=monday(ds(first)); pd(m)<=last; m=addD(m,7)) mons.push(m);
+  const home=mons.filter(m=>getWeek(m).st!=="flexible"), conf=mons.filter(m=>getWeek(m).st==="confirmada");
+  const stName={flexible:"Semana flexible",propuesta:"En casa · propuesta",conversar:"Por conversar con mamá",confirmada:"Confirmada con mamá"};
+  view.innerHTML=`<div class="stack">
+    <section class="panel stack">
+      <div class="row" style="justify-content:space-between"><h2>${MN[mo-1][0].toUpperCase()+MN[mo-1].slice(1)} ${y}</h2>
+        <div class="row"><button class="btn ghost sm" id="mPrev">← Mes anterior</button><button class="btn ghost sm" id="mNext">Mes siguiente →</button></div></div>
+      <p class="note">Meta: al menos dos semanas al mes llevando tus clases desde casa. Las semanas aparecen como propuesta hasta que marques que lo conversaste y se confirmó.</p>
+      <div class="row" style="gap:18px">
+        <div><span class="lbl">Semanas en casa planificadas</span><div class="big">${home.length} de ${mons.length}</div></div>
+        <div><span class="lbl">Confirmadas con mamá</span><div class="big">${conf.length}</div></div>
+        <div style="flex:1;min-width:180px"><span class="lbl">Meta de 2 semanas</span><div class="meter" aria-hidden="true"><i style="width:${Math.min(100,home.length/2*100)}%"></i></div>
+          <span class="note">${home.length>=2?(conf.length>=2?"Meta cumplida y confirmada.":"Meta planificada; falta confirmar con tu mamá."):"Elige "+(2-home.length)+" semana"+(2-home.length>1?"s":"")+" más."}</span></div>
+      </div>
+    </section>
+    <div class="monthweeks">${mons.map(m=>{const w=getWeek(m);const end=addD(m,6);
+      return `<div class="mw"><div><h3>Semana del ${pd(m).getDate()} ${MN[pd(m).getMonth()].slice(0,3)} al ${pd(end).getDate()} ${MN[pd(end).getMonth()].slice(0,3)}</h3>
+        <span class="note">${stName[w.st]}${w.st!=="flexible"?" · días en casa: "+((w.homeDays||[]).map(d=>DN[d]).join(", ")||"ninguno aún"):""}${w.auto?" · sugerencia":""}</span></div>
+        <button class="btn ghost sm" data-gw="${m}">Planificar semana</button></div>`;}).join("")}
+      ${mons.length===5?`<p class="note">Este mes tiene cinco semanas. Decide si la quinta sigue el patrón o se adapta a lo que necesiten el negocio y la universidad.</p>`:""}
+    </div>
+    <section class="panel stack"><h3>Qué días conviene estudiar desde casa</h3>
+      <div class="tbl"><table><thead><tr><th>Día</th><th>Primera clase</th><th>Salir del negocio a más tardar</th><th>Tu salida habitual</th><th>Lectura</th></tr></thead><tbody>
+      ${[1,2,3,4,5].map(wd=>{const e=dayEase(wd);const u=(FIXED[wd]||[]).filter(b=>b.k==="uni");const f=Math.min(...u.map(b=>toM(b.s)));const av=avgSalida(wd);
+        return `<tr><td>${DN[wd]}</td><td>${fmt(f)}</td><td>${fmt(e.need)}</td><td>${av!=null?fmt(av):'<span class="muted">sin registros</span>'}</td><td><span class="pill ${e.lvl==="facil"?"p-ok":e.lvl==="medio"?"p-warn":"p-bad"}">${e.t}</span></td></tr>`;}).join("")}
+      </tbody></table></div>
+      <p class="note">«Tu salida habitual» se calcula con lo que registras cada día. Con unas semanas de registros, esta tabla te dirá con datos reales qué días son viables.</p>
+    </section></div>`;
+  const $=id=>document.getElementById(id);
+  const shift=n=>{const d=new Date(y,mo-1+n,1);selMonth=d.getFullYear()+"-"+pad(d.getMonth()+1);render();};
+  $("mPrev").onclick=()=>shift(-1); $("mNext").onclick=()=>shift(1);
+  view.querySelectorAll("[data-gw]").forEach(b=>b.onclick=()=>{selWeek=b.dataset.gw;tab="semana";render();});
+}
+
+function renderTareas(){
+  view.innerHTML=`<section class="panel stack">
+    <h2>Tareas flexibles</h2>
+    <p class="note">Se ordenan por prioridad: universidad primero, luego liderazgo y vida espiritual, ejercicio y canto, cursos adicionales y, al final, el hogar. Los cursos adicionales quedan como pendientes de programación: solo verás horarios sugeridos hasta que los apruebes.</p>
+    <div class="tbl"><table><thead><tr><th>Tarea</th><th>Tipo</th><th>Min</th><th>Veces/sem.</th><th>Dónde</th><th>Estado</th><th></th></tr></thead><tbody>
+    ${S.tasks.map(t=>`<tr data-t="${t.id}">
+      <td><input type="text" id="n-${t.id}" data-f="n" value="${esc(t.n)}" aria-label="Nombre"></td>
+      <td><select id="c-${t.id}" data-f="c" aria-label="Tipo">${Object.entries(CATS).map(([k,v])=>`<option value="${k}" ${t.c===k?"selected":""}>${v.n}</option>`).join("")}</select></td>
+      <td><input type="number" id="d-${t.id}" data-f="d" min="10" step="5" value="${t.d}" aria-label="Minutos"></td>
+      <td><input type="number" id="x-${t.id}" data-f="x" min="1" max="7" value="${t.x}" aria-label="Veces por semana"></td>
+      <td><select id="w-${t.id}" data-f="w" aria-label="Dónde"><option value="casa" ${t.w==="casa"?"selected":""}>Solo en casa</option><option value="any" ${t.w!=="casa"?"selected":""}>Casa o negocio</option></select></td>
+      <td>${t.c==="curso"?`<button class="btn ghost sm" data-pend="${t.id}">${t.pend?"Pendiente · aprobar":"Aprobado · pausar"}</button>`:`<label class="check"><input type="checkbox" data-off="${t.id}" ${t.off?"":"checked"}> Activa</label>`}</td>
+      <td><button class="btn ghost sm" data-del="${t.id}" aria-label="Eliminar">Quitar</button></td></tr>`).join("")}
+    </tbody></table></div>
+    <div><button class="btn" id="addT">Agregar tarea</button></div>
+  </section>`;
+  view.querySelectorAll("tr[data-t] [data-f]").forEach(el=>el.onchange=()=>{
+    const t=S.tasks.find(x=>x.id===el.closest("tr").dataset.t); const f=el.dataset.f;
+    t[f]=(f==="d"||f==="x")?Math.max(1,+el.value||1):el.value;
+    if(f==="c"&&el.value==="curso"&&t.pend===undefined) t.pend=true;
+    save(); if(f==="c") render();
+  });
+  view.querySelectorAll("[data-pend]").forEach(b=>b.onclick=()=>{const t=S.tasks.find(x=>x.id===b.dataset.pend);t.pend=!t.pend;save();render();});
+  view.querySelectorAll("[data-off]").forEach(c=>c.onchange=()=>{const t=S.tasks.find(x=>x.id===c.dataset.off);t.off=!c.checked;save();});
+  view.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{S.tasks=S.tasks.filter(x=>x.id!==b.dataset.del);save();render();});
+  document.getElementById("addT").onclick=()=>{S.tasks.push({id:uid(),n:"Nueva tarea",d:30,c:"hogar",x:1,w:"casa",pref:[]});save();render();};
+}
+
+function renderAjustes(){
+  const c=S.cfg;
+  view.innerHTML=`<div class="grid2">
+   <section class="panel stack"><h2>Tiempos base</h2>
+    <div class="row">
+      <label class="f">Hora de despertar<input type="time" id="a-wake" value="${c.wake}"></label>
+      <label class="f">Meta de sueño (horas)<input type="number" id="a-goal" min="6" max="10" step="0.5" value="${c.goal}"></label>
+    </div>
+    <div class="row">
+      <label class="f">Traslado casa ↔ negocio (min)<input type="number" id="a-travel" min="1" value="${c.travel}"></label>
+      <label class="f">Margen para instalarme antes de clase (min)<input type="number" id="a-margin" min="0" value="${c.margin}"></label>
+    </div>
+    <div class="row">
+      <label class="f">Salida estimada si no registro nada<input type="time" id="a-estSalida" value="${c.estSalida}"></label>
+      <label class="f">Traslado a la iglesia (min)<input type="number" id="a-churchTravel" min="0" value="${c.churchTravel}"></label>
+    </div>
+    <label class="f">Máximo de tareas flexibles por día (min)<input type="number" id="a-maxFlex" min="30" step="15" value="${c.maxFlex}"></label>
+    <p class="note">Con despertar a las ${fmt(toM(c.wake))} y ${c.goal} h de sueño, deberías acostarte a las ${fmt(toM(c.wake)-Math.round(c.goal*60))} y empezar a prepararte 30 min antes. El tope de tareas por día evita llenar todos tus espacios libres.</p>
+   </section>
+   <section class="panel stack"><h2>Horarios por confirmar</h2>
+    <label class="f">Martes: reunión de líderes (se cruza con mayordomía 8:00–9:30 p. m.)
+      <select id="a-lideresMar"><option value="pendiente" ${c.lideresMar==="pendiente"?"selected":""}>Por confirmar (9:00–10:00 p. m.)</option><option value="despues" ${c.lideresMar==="despues"?"selected":""}>Empieza después: 9:30–10:30 p. m.</option><option value="virtual" ${c.lideresMar==="virtual"?"selected":""}>Es virtual: 9:00–10:00 p. m.</option><option value="no" ${c.lideresMar==="no"?"selected":""}>No asisto</option></select></label>
+    <label class="f">Viernes: inicio del ensayo de alabanza
+      <select id="a-ensayo"><option value="19:00" ${c.ensayo==="19:00"?"selected":""}>7:00 p. m.</option><option value="19:30" ${c.ensayo==="19:30"?"selected":""}>7:30 p. m.</option></select></label>
+    <h3>Materiales para estudiar desde el negocio</h3>
+    <label class="f">Uno por línea<textarea id="a-mats" rows="6" style="background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit;color:inherit">${esc(c.mats.join("\n"))}</textarea></label>
+   </section></div>`;
+  view.querySelectorAll("[id^=a-]").forEach(el=>el.onchange=()=>{
+    const k=el.id.slice(2);
+    if(k==="mats") c.mats=el.value.split("\n").map(s=>s.trim()).filter(Boolean);
+    else c[k]=el.type==="number"?+el.value:el.value;
+    save(); render();
+  });
+}
+
+
+/* ================= MI ASISTENTE: VOZ Y ALARMAS ================= */
+S.cfg=Object.assign({},DEFAULT.cfg,{nombre:"Brigit",voz:true,rate:1,alarmas:true,al:{uni:15,igl:45,casa:15,flex:0}},S.cfg);
+const CAP=window.Capacitor, NATIVE=!!(CAP&&CAP.isNativePlatform&&CAP.isNativePlatform());
+const plug=n=>{ if(!NATIVE) return null; try{ return (CAP.Plugins&&CAP.Plugins[n])||CAP.registerPlugin(n); }catch(e){ return null; } };
+const LN=plug("LocalNotifications"), TTS=plug("TextToSpeech");
+
+/* hora dicha en voz alta */
+function say(m){
+  m=((m%1440)+1440)%1440; const h=Math.floor(m/60), mi=m%60; const h12=h%12||12;
+  const parte = h<12?"de la mañana":h<19?"de la tarde":"de la noche";
+  const art = h12===1?"la una":"las "+h12;
+  const min = mi===0?"":mi===15?" y cuarto":mi===30?" y media":" y "+mi;
+  return art+min+" "+parte;
+}
+async function hablar(texto){
+  const out=document.getElementById("asTexto"); if(out) out.textContent=texto;
+  if(!S.cfg.voz) return;
+  try{
+    if(TTS){ await TTS.stop().catch(()=>{}); await TTS.speak({text:texto,lang:"es-US",rate:+S.cfg.rate||1,pitch:1.05,volume:1,category:"playback"}); return; }
+    if("speechSynthesis" in window){ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(texto); u.lang="es-ES"; u.rate=+S.cfg.rate||1; speechSynthesis.speak(u); }
+  }catch(e){}
+}
+
+/* resumen hablado de un día */
+function resumenDia(date,saludo){
+  const d=computeDay(date); const plan=planWeek(monday(date)); const di=(d.wd+6)%7;
+  const n=S.cfg.nombre?", "+S.cfg.nombre:"";
+  const hoy=date===ds(new Date()), man=date===addD(ds(new Date()),1);
+  let t=(saludo?(new Date().getHours()<12?"Buenos días":new Date().getHours()<19?"Buenas tardes":"Buenas noches")+n+". ":"");
+  t+=(hoy?"Hoy es ":man?"Mañana es ":"El ")+nice(date).toLowerCase()+". ";
+  if(d.wd===0) t+="Estarás en el negocio hasta la una y media. Sales a la iglesia a las tres y cincuenta. ";
+  else if(d.negFin<d.salida) t+=`Para tu clase desde casa tendrías que salir del negocio a ${say(d.negFin)}. Coordínalo con tu mamá. `;
+  else t+=`Sales del negocio ${d.salidaTipo==="registrado"?"a":"aproximadamente a"} ${say(d.negFin)}${d.salidaTipo==="estimado"?". Es una estimación, porque aún no registras la hora de regreso de tu mamá":""}. `;
+  const imp=d.blocks.filter(b=>["uni","igl","extra"].includes(b.k));
+  if(imp.length) t+="Tus compromisos: "+imp.map(b=>`${b.l.replace(/\(.*?\)/g,"").trim()} a ${say(b.s)}${b.where==="negocio"?", desde el negocio":b.where==="?"?", todavía sin decidir desde dónde":""}`).join("; ")+". ";
+  const fl=plan.placed[di]; if(fl.length) t+="Tareas para avanzar: "+fl.map(f=>`${f.l.replace(/\(.*?\)/g,"").trim()} a ${say(f.s)}`).join("; ")+". ";
+  const bad=d.alerts.filter(a=>a.lvl==="bad"); if(bad.length) t+=`Ojo, tienes ${bad.length===1?"un aviso importante":bad.length+" avisos importantes"}: ${bad[0].t} `;
+  t+=d.sleepH>=S.cfg.goal?`Podrás dormir unas ${Math.floor(d.sleepH)} horas. `:`Esta noche solo podrás dormir unas ${d.sleepH.toFixed(1).replace(".0","").replace("."," coma ")} horas, así que deja lo que no sea urgente. `;
+  return t+(saludo?"Tú puedes. Lo importante primero, y sin apurarte.":"");
+}
+
+/* ---------- alarmas reales en el celular ---------- */
+function alarmasDe(date){
+  const d=computeDay(date), al=S.cfg.al, out=[]; const plan=planWeek(monday(date)); const di=(d.wd+6)%7;
+  const base=pd(date); const at=m=>{ const x=new Date(base); x.setHours(0,m,0,0); return x; };
+  out.push({at:at(d.wake),t:"Buenos días ⏰",b:"Hora de levantarte y tu devocional breve.",habla:resumenDia(date,true)});
+  out.push({at:at(toM("07:23")-0),t:"Salir al negocio",b:d.from==="negocio"?"Hoy estudias desde el negocio: lleva laptop, cargador y audífonos.":"Sales ahora para llegar a las 7:30 a. m."});
+  if(d.negFin<d.salida && d.wd!==0) out.push({at:at(d.negFin-10),t:"Prepárate para regresar a casa",b:`En 10 minutos sales del negocio para llegar a tu clase.`});
+  for(const b of d.blocks){
+    if(b.k==="uni") out.push({at:at(b.s-al.uni),t:`Clase a las ${fmt(b.s)}`,b:b.where==="negocio"?"Te conectas desde el negocio. Revisa audífonos e internet.":b.where==="?"?"Aún no decides desde dónde te conectas.":"Te conectas desde casa."});
+    else if(b.k==="igl"||b.k==="extra"){ const viaje=b.l.includes("virtual")||b.place==="casa"?0:S.cfg.churchTravel; out.push({at:at(b.s-viaje-al.igl),t:b.l,b:viaje?`Empieza a las ${fmt(b.s)}. Sal en ${al.igl} minutos con tus materiales.`:`Empieza a las ${fmt(b.s)}.`}); }
+    else if(b.k==="casa"&&/Cocinar/.test(b.l)) out.push({at:at(b.s-al.casa),t:"Cocinar el almuerzo",b:`Empieza a las ${fmt(b.s)}.`});
+    else if(b.k==="tras"&&/iglesia/.test(b.l)) out.push({at:at(b.s),t:"Salir a la iglesia",b:"Sales ahora para llegar a las 4:00 p. m."});
+  }
+  for(const f of plan.placed[di]) out.push({at:at(f.s-al.flex),t:f.l,b:`Bloque flexible de ${f.e-f.s} minutos.`});
+  const prep=d.bed-30;
+  if(d.lastEnd+30>d.bed) out.push({at:at(d.lastEnd),t:"A descansar",b:"Noche corta: deja lo no urgente para mañana."});
+  else out.push({at:at(prep),t:"Prepárate para dormir",b:`Meta: dormir a ${say(d.bed)}. Deja listo lo de mañana.`,habla:resumenDia(addD(date,1),false)});
+  return out;
+}
+let alarmT=null, alarmEstado="";
+function programarAlarmas(){ clearTimeout(alarmT); alarmT=setTimeout(_programar,800); }
+async function _programar(){
+  if(!LN){ alarmEstado="Las alarmas funcionan en la app instalada en tu celular."; return pintarEstado(); }
+  try{
+    const pend=await LN.getPending(); if(pend.notifications?.length) await LN.cancel({notifications:pend.notifications.map(n=>({id:n.id}))});
+    if(!S.cfg.alarmas){ alarmEstado="Alarmas desactivadas."; return pintarEstado(); }
+    const now=Date.now(); let id=1; const list=[];
+    for(let i=0;i<7;i++) for(const a of alarmasDe(addD(ds(new Date()),i))){
+      if(a.at.getTime()<=now+30000) continue;
+      list.push({id:id++,title:a.t,body:a.b,schedule:{at:a.at,allowWhileIdle:true},channelId:"mi-asistente",extra:{habla:a.habla||(a.t+". "+a.b)},smallIcon:"ic_stat_notify",iconColor:"#8E72C4"});
+    }
+    list.forEach(n=>{ delete n.smallIcon; }); list.sort((a,b)=>a.schedule.at-b.schedule.at); list.forEach((n,i)=>n.id=i+1);
+    for(let i=0;i<list.length;i+=60) await LN.schedule({notifications:list.slice(i,i+60)});
+    const prox=list[0]; alarmEstado=`${list.length} alarmas programadas para los próximos 7 días.${prox?" La próxima: «"+prox.title+"» a las "+fmt(prox.schedule.at.getHours()*60+prox.schedule.at.getMinutes())+".":""}`;
+  }catch(e){ alarmEstado="No se pudieron programar las alarmas: "+(e.message||e); }
+  pintarEstado();
+}
+function pintarEstado(){ const el=document.getElementById("asEstado"); if(el) el.textContent=alarmEstado; }
+async function activarAlarmas(){
+  if(!LN){ alarmEstado="Instala la app en tu celular para usar alarmas."; return pintarEstado(); }
+  try{
+    let p=await LN.checkPermissions(); if(p.display!=="granted") p=await LN.requestPermissions();
+    if(p.display!=="granted"){ alarmEstado="Sin permiso de notificaciones. Actívalo en Ajustes del celular → Apps → Mi Asistente → Notificaciones."; return pintarEstado(); }
+    await LN.createChannel({id:"mi-asistente",name:"Alarmas de Mi Asistente",description:"Clases, iglesia, salidas y descanso",importance:5,visibility:1,vibration:true,lights:true,lightColor:"#8E72C4"});
+    if(LN.checkExactNotificationSetting){ const ex=await LN.checkExactNotificationSetting(); if(ex.exact_alarm!=="granted"&&LN.changeExactNotificationSetting) await LN.changeExactNotificationSetting(); }
+    S.cfg.alarmas=true; save(); _programar();
+  }catch(e){ alarmEstado="Error al activar: "+(e.message||e); pintarEstado(); }
+}
+if(LN){
+  LN.addListener("localNotificationActionPerformed",ev=>{ const h=ev?.notification?.extra?.habla; if(h) setTimeout(()=>hablar(h),400); });
+  LN.addListener("localNotificationReceived",n=>{ const h=n?.extra?.habla; if(h) hablar(h); });
+  LN.checkPermissions().then(p=>{ if(p.display==="granted"){ LN.createChannel({id:"mi-asistente",name:"Alarmas de Mi Asistente",importance:5,visibility:1,vibration:true}).catch(()=>{}); programarAlarmas(); } }).catch(()=>{});
+}
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ render(); programarAlarmas(); } });
+const _save=save; save=function(){ _save(); programarAlarmas(); };
+
+function renderAsistente(){
+  const c=S.cfg;
+  view.innerHTML=`<div class="grid2">
+   <section class="panel stack">
+     <h2>Hola${c.nombre?", "+esc(c.nombre):""}</h2>
+     <p class="note">Toca una pregunta y tu asistente te responde en voz alta.</p>
+     <div class="chips">
+       <button class="chip" data-q="hoy">¿Qué tengo hoy?</button>
+       <button class="chip" data-q="manana">¿Qué tengo mañana?</button>
+       <button class="chip" data-q="sueno">¿Cuántas horas dormiré?</button>
+       <button class="chip" data-q="semana">¿Cómo viene mi semana?</button>
+       <button class="chip" data-q="callar">Silencio</button>
+     </div>
+     <div class="panel" style="background:var(--sand);border:0"><span class="lbl">Tu asistente dice</span><p id="asTexto" style="margin:.4rem 0 0;max-width:65ch">Toca «¿Qué tengo hoy?» para escuchar tu día.</p></div>
+   </section>
+   <section class="panel stack">
+     <h2>Alarmas</h2>
+     <p class="note">Suenan aunque la app esté cerrada. Al tocar una alarma, la asistente te la lee. Se reprograman solas cuando cambias la hora de regreso de tu mamá o tus tareas.</p>
+     <div class="row"><button class="btn" id="asAct">${NATIVE?"Activar y programar alarmas":"Solo en la app del celular"}</button>
+       <label class="check"><input type="checkbox" id="asOn" ${c.alarmas?"checked":""}> Alarmas encendidas</label></div>
+     <p class="note" id="asEstado">${esc(alarmEstado)}</p>
+     <div class="row">
+       <label class="f">Antes de clases (min)<input type="number" id="al-uni" min="0" value="${c.al.uni}"></label>
+       <label class="f">Antes de salir a la iglesia (min)<input type="number" id="al-igl" min="0" value="${c.al.igl}"></label>
+       <label class="f">Antes de cocinar (min)<input type="number" id="al-casa" min="0" value="${c.al.casa}"></label>
+     </div>
+     <h3>Voz</h3>
+     <div class="row">
+       <label class="check"><input type="checkbox" id="asVoz" ${c.voz?"checked":""}> Que me hable</label>
+       <label class="f">Velocidad<select id="asRate">${[[0.85,"Lenta"],[1,"Normal"],[1.15,"Rápida"]].map(([v,t])=>`<option value="${v}" ${+c.rate===v?"selected":""}>${t}</option>`).join("")}</select></label>
+       <label class="f">Cómo te llamo<input type="text" id="asNom" value="${esc(c.nombre)}"></label>
+     </div>
+   </section></div>`;
+  const $=id=>document.getElementById(id);
+  view.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{
+    const q=b.dataset.q, hoy=ds(new Date());
+    if(q==="callar"){ try{TTS?TTS.stop():speechSynthesis.cancel();}catch(e){} return; }
+    if(q==="hoy") hablar(resumenDia(hoy,true));
+    if(q==="manana") hablar(resumenDia(addD(hoy,1),false));
+    if(q==="sueno"){ const d=computeDay(hoy); hablar(`Esta noche terminas tus compromisos a ${say(d.lastEnd)}. Si te acuestas a ${say(Math.max(d.bed,d.lastEnd+30))} y te levantas a ${say(d.wake)}, dormirás unas ${d.sleepH.toFixed(1).replace(".0","").replace("."," coma ")} horas. Tu meta es ${c.goal}.`); }
+    if(q==="semana"){ const p=planWeek(monday(hoy)); const malas=p.days.filter(d=>d.sleepH<c.goal).map(d=>DN[d.wd].toLowerCase()); const ch=p.days.reduce((a,d)=>a+d.alerts.filter(x=>x.lvl==="bad").length,0);
+      const w=getWeek(monday(hoy)); hablar(`Esta semana ${w.st==="flexible"?"es flexible":"planeas estudiar desde casa el "+(w.homeDays||[]).map(x=>DN[x].toLowerCase()).join(" y el ")+(w.st==="confirmada"?", ya confirmado con tu mamá":", pero todavía falta conversarlo con tu mamá")}. Tienes ${ch===0?"ningún choque":ch+(ch===1?" aviso importante":" avisos importantes")}. ${malas.length?"Las noches cortas son: "+malas.join(", ")+".":"Todas las noches alcanzas tu meta de sueño."} ${p.unplaced.length?"Algunas tareas no entran sin quitarte sueño; revisa la pestaña Mi semana.":""}`); }
+  });
+  $("asAct").onclick=activarAlarmas;
+  $("asOn").onchange=e=>{ c.alarmas=e.target.checked; save(); };
+  ["uni","igl","casa"].forEach(k=>$("al-"+k).onchange=e=>{ c.al[k]=Math.max(0,+e.target.value||0); save(); });
+  $("asVoz").onchange=e=>{ c.voz=e.target.checked; save(); };
+  $("asRate").onchange=e=>{ c.rate=+e.target.value; save(); };
+  $("asNom").onchange=e=>{ c.nombre=e.target.value.trim(); save(); };
+}
+
+function render(){
+  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===tab));
+  ({asistente:renderAsistente,hoy:renderHoy,semana:renderSemana,mes:renderMes,tareas:renderTareas,ajustes:renderAjustes})[tab]();
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{tab=b.dataset.tab;render();});
+render();
+</script>
+
+</html>
